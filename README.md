@@ -26,3 +26,8 @@ For easier processing, the file was split into sub - csv files and then  subset 
 The code used for this can be found in 
 "loading_data.R" 
 
+
+A list of flood zones can be found here: 
+https://www.leegov.com/dcd/flood/defined
+
+
