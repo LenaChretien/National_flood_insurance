@@ -14,7 +14,7 @@ state_list = c('AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID',
 
 
 
-data <- read.table('Data/flood5.csv', skip = 1, nrows = 1, header=F, sep=",", fill=TRUE)
+data <- read.table('data/flood5.csv', skip = 1, nrows = 1, header=F, sep=",", fill=TRUE)
 
 
 data %>% select(cnames) %>%
@@ -46,10 +46,10 @@ remove(data)
 
 skipSize = 1
 for (i in 1:51){
-  data <- read.table(paste('Data/flood',i,'.csv',sep = ''), skip=skipSize,
+  data <- read.table(paste('data/flood',i,'.csv',sep = ''), skip=skipSize,
                      header=F, fill=TRUE, sep=",")
   
-  data = data %>% select(cnames) %>%
+  data =  data %>% select(cnames) %>%
     rename(condo = V6, discount = V9, 
            fedfee = V15,  floodzone = V16,
            lat = V19, lon = V21,
@@ -62,14 +62,16 @@ for (i in 1:51){
            building_ins = V43,
            content_ins = V44, 
            premium = V45) %>%
-    mutate(date_build = as.Date(date_build, format = "%Y-%m-%d"), 
-           date_nb = as.Date(date_nb, format = "%Y-%m-%d"),
-           policydate = as.Date(policydate, format = "%Y-%m-%d"),
+    mutate(date_build = as.Date(date_build, format = "%Y-%m-%d"),
+           date_nb = as.Date(date_nb, format = "%Y-%m-%d")) %>% 
+    mutate(policydate = as.Date(policydate, format = "%Y-%m-%d"),
            policy_enddata = as.Date(policy_enddata, format = "%Y-%m-%d")) %>%
     filter(!is.na(policycost)) %>% filter(!is.na(policydate)) %>% 
     filter(!is.na(zip)) %>% filter(!is.na(city)) %>% filter(!is.na(building_ins)) %>%
     filter(!is.na(content_ins)) %>% filter(!is.na(policycost)) %>% filter(!is.na(floodzone)) %>%
-    filter(policydate > as.Date("2015-12-31"))
+    filter(policydate > as.Date("2015-12-31")) %>% filter(policycost <= 5000)
+  
+    
   
   if (dim(data)[1] != 0){
     for (k in 1:51){
@@ -95,4 +97,4 @@ for (i in 1:length(state_list)) {
   len = len+dim(state)[1]
   print(i)
 }
-## 9,256,517 data points (of 50,000,000)
+## 9,048,085 data points (of 50,000,000)
