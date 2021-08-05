@@ -45,7 +45,7 @@ remove(data)
 
 
 skipSize = 1
-for (i in 1:51){
+for (i in 46:51){
   data <- read.table(paste('data/flood',i,'.csv',sep = ''), skip=skipSize,
                      header=F, fill=TRUE, sep=",")
   
@@ -69,7 +69,7 @@ for (i in 1:51){
     filter(!is.na(policycost)) %>% filter(!is.na(policydate)) %>% 
     filter(!is.na(zip)) %>% filter(!is.na(city)) %>% filter(!is.na(building_ins)) %>%
     filter(!is.na(content_ins)) %>% filter(!is.na(policycost)) %>% filter(!is.na(floodzone)) %>%
-    filter(policydate > as.Date("2015-12-31")) %>% filter(policycost <= 5000)
+    filter(policydate > as.Date("2012-12-31")) %>% filter(policycost <= 5000)
   
     
   
@@ -85,10 +85,29 @@ for (i in 1:51){
 }
 
 ## Save the state data
-
+remove(data)
 for (i in 1:length(state_list)) {
-  eval(parse(text = paste("write.csv(", state_list[i], ",'Data/", state_list[i], ".csv')", sep = '')))
+  eval(parse(text = paste("save(", state_list[i], ",file = 'data/", state_list[i], ".Rda')", sep = '')))
 }
+
+
+
+#start.time <- Sys.time()
+#save(FL,file="data/FL.Rda")
+#end.time <- Sys.time()
+#time.taken <- end.time - start.time
+#time.taken
+
+
+
+#start.time <- Sys.time()
+#write.csv(FL,="data/FL.Rda")
+#end.time <- Sys.time()
+#time.taken <- end.time - start.time
+#time.taken
+
+
+
 
 
 len = 0
@@ -97,4 +116,4 @@ for (i in 1:length(state_list)) {
   len = len+dim(state)[1]
   print(i)
 }
-## 9,048,085 data points (of 50,000,000)
+## 15,986,508 data points (of 50,000,000)

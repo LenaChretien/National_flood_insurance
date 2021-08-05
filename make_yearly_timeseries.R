@@ -4,7 +4,7 @@ year_list = c('2013','2014','2015','2016','2017','2018','2019')
 for (i in 1:length(year_list)){
       eval(parse(text = paste("DD = read.csv('data/yr_", year_list[i], ".csv')", sep = '')))
       
-      year = DD %>% 
+      year = DD %>% filter(policydate < as.Date("2019-08-01")) %>%
             summarise(mean_cost = mean(policycost)) %>% 
             mutate(year = year_list[i])
 
@@ -24,7 +24,7 @@ for (i in 1:length(year_list)){
       ## Second half of years data
       
       eval(parse(text = paste("DD = read.csv('data/yr_", year_list[i], "_2.csv')", sep = '')))
-      year2 = DD %>% 
+      year2 = DD %>% filter(policydate < as.Date("2019-08-01")) %>%
             summarise(mean_cost = mean(policycost)) %>% 
             mutate(year = year_list[i])
 
@@ -75,4 +75,4 @@ for (i in 1:length(year_list)){
 
 year_mean = df
 
-write.csv(year_mean, 'data/year_mean.csv')
+write_csv(year_mean, 'data/year_mean.csv')

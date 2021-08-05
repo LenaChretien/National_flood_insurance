@@ -20,6 +20,10 @@ usm = map_data('usa')
 usstates = map_data("state")
 states = unique(usstates$region)
 
+############################################################
+############### MEAN POLICY COST BY STATE ###############
+############################################################
+
 for (i in 1:length(state_list)){
    eval(parse(text = paste("DD = read.csv('data/", state_list[i], ".csv')", sep = '')))
    DD = mean(DD$policycost)
@@ -37,13 +41,7 @@ for (i in 1:length(state_list)){
 } 
 
 usstates = left_join(usstates,df, by = "region")
-      
-
-#p = ggplot(dat = usstates, aes(x = long,y = lat, group = group) )
-#p = p + geom_polygon(fill = "white", color = 'black') 
-#p
-
-
+   
 
 p2 = ggplot(dat = usstates, 
             mapping = aes(x = long,y = lat, group = group, fill = mean_cost))
@@ -53,8 +51,6 @@ p2 = p2 + geom_polygon(color = "gray90", size = 0.1) +
    labs(title = 'Mean policy cost') + labs(fill = "Policy cost") + 
    scale_fill_gradient(low = "white", high = "#800026")
 p2
-
-
 
 
 
@@ -71,6 +67,10 @@ p3 + theme(axis.text.y = element_text(size = 6))
 #### number of policy holders. 
 usstates = map_data("state")
 states = unique(usstates$region)
+
+############################################################
+############### NUMBER OF POLICIES BY STATE ###############
+############################################################
 
 for (i in 1:length(state_list)){
    eval(parse(text = paste("DD = read.csv('data/", state_list[i], ".csv')", sep = '')))
@@ -102,9 +102,6 @@ p2 = p2 + geom_polygon(color = "gray90", size = 0.1) +
 p2
 
 
-
-
-
 states_uni = usstates %>% group_by(state) %>% summarize(num_policies = mean(num_policies)) 
 
 
@@ -119,9 +116,12 @@ p3 + theme(axis.text.y = element_text(size = 6))
 
 ###### Total amount covered by insurance
 # Add building and content together
-
 usstates = map_data("state")
 states = unique(usstates$region)
+
+############################################################
+############### MEAN TOTAL AMOUNT COVERED BY COST BY STATE ###############
+############################################################
 
 for (i in 1:length(state_list)){
    eval(parse(text = paste("DD = read.csv('data/", state_list[i], ".csv')", sep = '')))
@@ -147,13 +147,10 @@ p2 = ggplot(dat = usstates,
 p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
    coord_map(projection = 'albers', lat0 = 39, lat1 = 45, 
              xlim = c(-118, -75), ylim = c(50, 25)) + 
-   labs(title = 'Dollar amount of insured property', subtitle = '(building and content)') + labs(fill = "$$ insured [K]") + 
+   labs(title = 'Average dollar amount of insured property', subtitle = '(building and content)') + labs(fill = "$$ insured [K]") + 
    labs(x = 'Longitude', y = 'Latitude') + 
    scale_fill_gradient(low = "#fff7fb", high = "#014636")
 p2
-
-
-
 
 
 states_uni = usstates %>% group_by(state) %>% summarize(amount_ins = mean(amount_ins)) 
@@ -168,6 +165,9 @@ p3 + theme(axis.text.y = element_text(size = 6))
 ###### Insurance amount by county
 library(zipcodeR)
 
+############################################################
+############### MEAN POLICYCOST BY COUNTY ###############
+############################################################
 
  
 
@@ -222,3 +222,49 @@ p2 = p2 + geom_polygon(color = "gray90", size = 0.1) +
 p2
 
 
+############################################################
+######## TOTAL AMOUNT OF MONEY PAYED FOR INSURANCE  ###############
+###### sum of policy cost  ##################
+############################################################
+
+usm = map_data('usa')
+usstates = map_data("state")
+states = unique(usstates$region)
+
+
+for (i in 1:length(state_list)){
+   eval(parse(text = paste("DD = read.csv('data/", state_list[i], ".csv')", sep = '')))
+   DD = sum(DD$policycost)
+   if (i == 1){
+      df = data.frame(states[i], DD)
+      df['state'] = state_list[i]
+      colnames(df) = c('region', 'sum_cost', 'state')
+   } else {
+      dfdf = data.frame(states[i],DD)
+      dfdf['state'] = state_list[i]
+      colnames(dfdf) = c('region', 'sum_cost', 'state')
+      df = rbind(df,dfdf)
+   }
+   print(i)
+} 
+
+usstates = left_join(usstates,df, by = "region")
+usstates$sum_cost = usstates$sum_cost/10e+6
+
+p2 = ggplot(dat = usstates, 
+            mapping = aes(x = long,y = lat, group = group, fill = sum_cost))
+p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
+   coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
+             xlim = c(-118, -75), ylim = c(50, 25)) + 
+   labs(title = 'Total policy cost') + labs(fill = "$ Mil.") + 
+   scale_fill_gradient(low = "white", high = "#800026")
+p2
+
+
+
+states_uni = usstates %>% group_by(state) %>% summarize(sum_cost = mean(sum_cost)) 
+
+
+p3 = states_uni %>% ggplot(aes(sum_cost, reorder(state, -sum_cost))) + geom_col()+
+   labs(y = "State", x = "Total Policy Cost [Mil $]", title = "Total cost of policy per state")
+p3 + theme(axis.text.y = element_text(size = 6))
