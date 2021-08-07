@@ -26,15 +26,18 @@ states = unique(usstates$region)
 
 for (i in 1:length(state_list)){
    eval(parse(text = paste("DD = read.csv('data/", state_list[i], ".csv')", sep = '')))
-   DD = mean(DD$policycost)
+   DD = DD %>% summarize(mean_cost = mean(DD$policycost), 
+                      number = n(),
+                      amt = mean(DD$building_ins + DD$content_ins))
+   
    if (i == 1){
       df = data.frame(states[i], DD)
       df['state'] = state_list[i]
-      colnames(df) = c('region', 'mean_cost', 'state')
+      colnames(df) = c('region', 'mean_cost','number','amt','state')
    } else {
       dfdf = data.frame(states[i],DD)
       dfdf['state'] = state_list[i]
-      colnames(dfdf) = c('region', 'mean_cost', 'state')
+      colnames(dfdf) = c('region', 'mean_cost','number','amt','state')
       df = rbind(df,dfdf)
    }
    print(i)
@@ -48,66 +51,75 @@ p2 = ggplot(dat = usstates,
 p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
    coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
              xlim = c(-118, -75), ylim = c(50, 25)) + 
-   labs(title = 'Mean policy cost') + labs(fill = "Policy cost") + 
+   labs(fill = "Mean Cost [$}", x = '', y = '') +
+   theme(axis.ticks.x = element_blank(),
+         axis.text.x = element_blank(),
+         legend.title = element_text(size = 7), 
+         legend.text = element_text(size = 7),
+         legend.key.size = unit(1,"cm"),
+         legend.key.width = unit(0.5,"cm"))+ 
    scale_fill_gradient(low = "white", high = "#800026")
 p2
+ggsave("state_cost.jpg", width = 6, height = 4)
 
 
 
 states_uni = usstates %>% group_by(state) %>% summarize(mean_cost = mean(mean_cost)) 
 
 
-p3 = states_uni %>% ggplot(aes(mean_cost, reorder(state, -mean_cost))) + geom_col()+
-   labs(y = "State", x = "Policy Cost", title = "Average cost of policy per state")
-p3 + theme(axis.text.y = element_text(size = 6))
+p3 = states_uni %>% 
+   ggplot(aes(mean_cost, reorder(state, -mean_cost))) + 
+   geom_col()+
+   labs(y = "State",
+        x = "Policy Cost [$]", 
+        title = "Average cost of policy per state")
+p3 + theme(axis.text.y = element_text(size = 12),
+           axis.text.x = element_text(size = 12))
+ggsave("state_cost_bar.jpg", width = 6, height = 10)
 
 
 
 
-#### number of policy holders. 
-usstates = map_data("state")
-states = unique(usstates$region)
 
 ############################################################
 ############### NUMBER OF POLICIES BY STATE ###############
 ############################################################
 
-for (i in 1:length(state_list)){
-   eval(parse(text = paste("DD = read.csv('data/", state_list[i], ".csv')", sep = '')))
-   DD = dim(DD)[1]
-   if (i == 1){
-      df = data.frame(states[i], DD)
-      df['state'] = state_list[i]
-      colnames(df) = c('region', 'num_policies', 'state')
-   } else {
-      dfdf = data.frame(states[i], DD)
-      dfdf['state'] = state_list[i]
-      colnames(dfdf) = c('region', 'num_policies', 'state')
-      df = rbind(df,dfdf)
-   }
-   print(i)
-} 
 
-usstates = left_join(usstates,df, by = "region")
-usstates$num_policies = log(usstates$num_policies)
+
 
 p2 = ggplot(dat = usstates, 
-            mapping = aes(x = long,y = lat, group = group, fill = num_policies))
+            mapping = aes(x = long,y = lat, group = group, fill = number/1e6))
 p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
    coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
              xlim = c(-118, -75), ylim = c(50, 25)) + 
-   labs(title = 'Number of policyholders') + labs(fill = "Log Number") + 
-   labs(x = 'Longitude', y = 'Latitude') + 
-   scale_fill_gradient(low = "#ffffd9", high = "#081d58")
+   labs(fill = "Number of policies [mil]", x = '', y = '') +
+   theme(axis.ticks.x = element_blank(),
+         axis.text.x = element_blank(),
+         legend.title = element_text(size = 7), 
+         legend.text = element_text(size = 7),
+         legend.key.size = unit(1,"cm"),
+         legend.key.width = unit(0.5,"cm"))+ 
+   scale_fill_gradient(low = "white", high = "#800026")
 p2
+ggsave("state_number.jpg", width = 6, height = 4)
 
 
-states_uni = usstates %>% group_by(state) %>% summarize(num_policies = mean(num_policies)) 
+
+states_uni = usstates %>% group_by(state) %>% summarize(num_policies = mean(number)) 
 
 
-p3 = states_uni %>% ggplot(aes(num_policies, reorder(state, -num_policies))) + geom_col()+
-   labs(y = "State", x = "Number of policies", title = "(Log) Number of policies between 2015 - 2019 per state")
-p3 + theme(axis.text.y = element_text(size = 6))
+p3 = states_uni %>% 
+   ggplot(aes(num_policies, reorder(state, -num_policies))) + 
+   geom_col()+
+   labs(y = "State",
+        x = "Policy Cost [$]", 
+        title = "Average cost of policy per state")
+p3 + theme(axis.text.y = element_text(size = 12),
+           axis.text.x = element_text(size = 12))
+ggsave("state_num_bar.jpg", width = 6, height = 10)
+
+
 
 
 
@@ -116,49 +128,90 @@ p3 + theme(axis.text.y = element_text(size = 6))
 
 ###### Total amount covered by insurance
 # Add building and content together
-usstates = map_data("state")
-states = unique(usstates$region)
-
 ############################################################
 ############### MEAN TOTAL AMOUNT COVERED BY COST BY STATE ###############
 ############################################################
 
-for (i in 1:length(state_list)){
-   eval(parse(text = paste("DD = read.csv('data/", state_list[i], ".csv')", sep = '')))
-   DD = mean(DD$building_ins + DD$content_ins)
-   if (i == 1){
-      df = data.frame(states[i], DD)
-      df['state'] = state_list[i]
-      colnames(df) = c('region', 'amount_ins', 'state')
-   } else {
-      dfdf = data.frame(states[i], DD)
-      dfdf['state'] = state_list[i]
-      colnames(dfdf) = c('region', 'amount_ins', 'state')
-      df = rbind(df,dfdf)
-   }
-   print(i)
-} 
+p2 = ggplot(dat = usstates, 
+            mapping = aes(x = long,y = lat, group = group, fill = amt/1e6))
+p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
+   coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
+             xlim = c(-118, -75), ylim = c(50, 25)) + 
+   labs(fill = "Amount [mil $]", x = '', y = '') +
+   theme(axis.ticks.x = element_blank(),
+         axis.text.x = element_blank(),
+         legend.title = element_text(size = 7), 
+         legend.text = element_text(size = 7),
+         legend.key.size = unit(1,"cm"),
+         legend.key.width = unit(0.5,"cm"))+ 
+   scale_fill_gradient(low = "white", high = "#800026")
+p2
+ggsave("state_amt.jpg", width = 6, height = 4)
 
-usstates = left_join(usstates,df, by = "region")
-usstates$amount_ins = usstates$amount_ins/1000
+
+
+states_uni = usstates %>% group_by(state) %>% summarize(amount_ins = mean(amt)) 
+
+
+p3 = states_uni %>% 
+   ggplot(aes(amount_ins, reorder(state, -amount_ins))) + 
+   geom_col()+
+   labs(y = "State",
+        x = "Amount [mil $]", 
+        title = "Average amount insured")
+p3 + theme(axis.text.y = element_text(size = 12),
+           axis.text.x = element_text(size = 12))
+ggsave("state_amt_bar.jpg", width = 6, height = 10)
+
+
+
+
+
+
+
+###### cost per $ insured 
+##### cost/amt
+############################################################
+############### MEAN TOTAL AMOUNT COVERED BY COST BY STATE ###############
+############################################################
 
 p2 = ggplot(dat = usstates, 
-            mapping = aes(x = long,y = lat, group = group, fill = amount_ins))
+            mapping = aes(x = long,y = lat, group = group, fill = (mean_cost/amt)*1000))
 p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
-   coord_map(projection = 'albers', lat0 = 39, lat1 = 45, 
+   coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
              xlim = c(-118, -75), ylim = c(50, 25)) + 
-   labs(title = 'Average dollar amount of insured property', subtitle = '(building and content)') + labs(fill = "$$ insured [K]") + 
-   labs(x = 'Longitude', y = 'Latitude') + 
-   scale_fill_gradient(low = "#fff7fb", high = "#014636")
+   labs(fill = "Cost per insured [$/K $]", x = '', y = '') +
+   theme(axis.ticks.x = element_blank(),
+         axis.text.x = element_blank(),
+         legend.title = element_text(size = 7), 
+         legend.text = element_text(size = 7),
+         legend.key.size = unit(1,"cm"),
+         legend.key.width = unit(0.5,"cm"))+ 
+   scale_fill_gradient(low = "white", high = "#800026")
 p2
+ggsave("state_cost_per_amt.jpg", width = 6, height = 4)
 
 
-states_uni = usstates %>% group_by(state) %>% summarize(amount_ins = mean(amount_ins)) 
+
+states_uni = usstates %>% group_by(state) %>% summarize(cost_amt = mean((mean_cost/amt)*1000)) 
 
 
-p3 = states_uni %>% ggplot(aes(amount_ins, reorder(state, -amount_ins))) + geom_col()+
-   labs(y = "State", x = "Number of policies", title = "(Log) Number of policies between 2015 - 2019 per state")
-p3 + theme(axis.text.y = element_text(size = 6))
+p3 = states_uni %>% 
+   ggplot(aes(cost_amt, reorder(state, -cost_amt))) + 
+   geom_col()+
+   labs(y = "State",
+        x = "Cost/1000 $ [mil $]", 
+        title = "Cost per 1000$")
+p3 + theme(axis.text.y = element_text(size = 12),
+           axis.text.x = element_text(size = 12))
+ggsave("state_cost_per_amt.jpg", width = 6, height = 10)
+
+
+
+
+
+
+
 
 
 

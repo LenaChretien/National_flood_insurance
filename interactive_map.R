@@ -43,6 +43,7 @@ library(sf)
 library(leaflet)
 library(leaflet.extras)
 library(leaflet.esri)
+library(leaflet.minicharts)
 library(dplyr)
 library(RColorBrewer)
 library(htmlwidgets)
@@ -132,9 +133,9 @@ map1 = leaflet() %>%
                   fillOpacity = 0.7,
                   bringToFront = TRUE),
                popup = ~popup_sb) %>%
-   addLabelOnlyMarkers(lng = sdf, lat = 44.5,
-                      label = "WI",
-                      labelOptions = labelOptions(noHide = T)) %>%
+   #addLabelOnlyMarkers(lng = sdf, lat = 44.5,
+   #                   label = "WI",
+   #                   labelOptions = labelOptions(noHide = T)) %>%
    addLegend(cost_pal, values = states_merged_sb$mean_cost,
              position = "bottomright",
              title = "Mean policy cost") 
@@ -155,4 +156,25 @@ map1
    #      )))
 
 map1
+
+
+year_list = c('2013','2014','2015','2016','2017','2018','2019')
+
+state_list = c('AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID',
+               'IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT',
+               'NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+               'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY')
+
+load('data/states_meancost.Rda')
+
+st = "AL"
+
+p = df %>% mutate(group = ifelse(state == "AL", "1","0")) %>%
+   ggplot(aes(mean_cost, reorder(state, -mean_cost), fill = group)) + geom_col()+
+   labs(y = "State", x = "Policy Cost", title = "Average cost of policy per state")
+p = p + theme(axis.text.y = element_text(size = 6)) + 
+   scale_fill_manual(values = c("1" = "red", "0" = "darkgray"), guide = FALSE)
+p
+
+
 
