@@ -1,8 +1,9 @@
 library(tidyverse)
 library(ggplot2)
 
-#Load file, subset for dates 2016 - 2021 and split into states to help with memory. 
+#Load file, and split into states to help with memory. 
 
+# subset for dates 2016 - 2019?
 
 
 cnames = c(6,9,15,16,19,21,25,27,28,29,30,32,33,36,37,38,41,43,44,45)
@@ -45,7 +46,7 @@ remove(data)
 
 
 skipSize = 1
-for (i in 46:51){
+for (i in 41:51){
   data <- read.table(paste('data/flood',i,'.csv',sep = ''), skip=skipSize,
                      header=F, fill=TRUE, sep=",")
   
@@ -69,7 +70,7 @@ for (i in 46:51){
     filter(!is.na(policycost)) %>% filter(!is.na(policydate)) %>% 
     filter(!is.na(zip)) %>% filter(!is.na(city)) %>% filter(!is.na(building_ins)) %>%
     filter(!is.na(content_ins)) %>% filter(!is.na(policycost)) %>% filter(!is.na(floodzone)) %>%
-    filter(policydate > as.Date("2012-12-31")) %>% filter(policycost <= 5000)
+    filter(policydate > as.Date("2008-12-31")) %>% filter(policycost <= 5000)
   
     
   
