@@ -35,5 +35,7 @@ The code used for this can be found in
 Policycost of larger than $5000 were excluded, due to small numbers of them. 
 
 
+Census data included was found here:
+https://www.census.gov/data/tables/time-series/demo/popest/2010s-state-total.html
 
 

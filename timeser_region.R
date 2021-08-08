@@ -65,156 +65,6 @@ ggplot(data = usstates, aes(x = long, y = lat, group = group, fill = geo_region)
 
 
 
-# Make a graph of the yearly insurance cost by region
-NE = c('ME','NH','MA','RI','VT','NY','PA','NJ','DE','CT')
-for (i in (1:length(NE))){
-   load(paste('data/', NE[i], '.Rda', sep = ''))
-   eval(parse(text = paste('st= ' , NE[i], sep = '')))
-   eval(parse(text = paste('remove(', NE[i],')', sep = '')))
-          
-   if (i == 1){
-      NE_df = st
-   } else {
-      NE_df = rbind(NE_df,st)
-   }
-}
-NE_df = NE_df %>%
-   filter(policydate < as.Date("2019-08-01")) %>%
-   summarise_by_time(.date_var = policydate, .by= "year", 
-                     cost = mean(policycost), 
-                     num = n(),
-                     amt = mean(building_ins + content_ins)) %>%
-   mutate(state = 'NE')
-
-remove(st)
-
-
-MW = c('ND','SD','NE','KS','MO','IA','MN','WI','IL','IN','MI','OH')
-for (i in (1:length(MW))){
-   load(paste('data/', MW[i], '.Rda', sep = ''))
-   eval(parse(text = paste('st= ' , MW[i], sep = '')))
-   eval(parse(text = paste('remove(', MW[i],')', sep = '')))
-   
-   if (i == 1){
-      MW_df = st
-   } else {
-      MW_df = rbind(MW_df,st)
-   }
-}
-MW_df = MW_df %>%
-   filter(policydate < as.Date("2019-08-01")) %>%
-   summarise_by_time(.date_var = policydate, .by= "year", 
-                     cost = mean(policycost), 
-                     num = n(),
-                     amt = mean(building_ins + content_ins)) %>%
-   mutate(state = 'MW')
-
-remove(st)
-
-
-S = c('WV','VA','MD','DC','NC','KY','TN','SC','GA','AL','MS','LA','AR','OK','TX','FL')
-for (i in (1:length(S))){
-   load(paste('data/', S[i], '.Rda', sep = ''))
-   eval(parse(text = paste('st= ' , S[i], sep = '')))
-   eval(parse(text = paste('remove(', S[i],')', sep = '')))
-   
-   if (i == 1){
-      S_df = st
-   } else {
-      S_df = rbind(S_df,st)
-   }
-}
-remove(st)
-S_df = S_df %>%
-   filter(policydate < as.Date("2019-08-01")) %>%
-   summarise_by_time(.date_var = policydate, .by= "year", 
-                     cost = mean(policycost), 
-                     num = n(),
-                     amt = mean(building_ins + content_ins)) %>%
-   mutate(state = 'S')
-
-
-
-
-MD = c('MT','ID','WY','CO','NM','AZ','UT','NV')
-for (i in (1:length(MD))){
-   load(paste('data/', MD[i], '.Rda', sep = ''))
-   eval(parse(text = paste('st= ' , MD[i], sep = '')))
-   eval(parse(text = paste('remove(', MD[i],')', sep = '')))
-   
-   if (i == 1){
-      MD_df = st
-   } else {
-      MD_df = rbind(MD_df,st)
-   }
-}
-remove(st)
-MD_df = MD_df %>%
-   filter(policydate < as.Date("2019-08-01")) %>%
-   summarise_by_time(.date_var = policydate, .by= "year", 
-                     cost = mean(policycost), 
-                     num = n(),
-                     amt = mean(building_ins + content_ins)) %>%
-   mutate(state = 'MD')
-
-
-
-PA = c('WA','OR','CA')
-for (i in (1:length(PA))){
-   load(paste('data/', PA[i], '.Rda', sep = ''))
-   eval(parse(text = paste('st= ' , PA[i], sep = '')))
-   eval(parse(text = paste('remove(', PA[i],')', sep = '')))
-   
-   if (i == 1){
-      PA_df = st
-   } else {
-      PA_df = rbind(PA_df,st)
-   }
-}
-remove(st)
-PA_df = PA_df %>%
-   filter(policydate < as.Date("2019-08-01")) %>%
-   summarise_by_time(.date_var = policydate, .by= "year", 
-                     cost = mean(policycost), 
-                     num = n(),
-                     amt = mean(building_ins + content_ins)) %>%
-   mutate(state = 'PA')
-
-
-region_df = rbind(MD_df,MW_df,NE_df,PA_df,S_df)
-
-
-
-
-p1 = ggplot(data = region_df, aes(x = policydate, y = cost, group = state, color = state)) +
-   theme_bw() + 
-   geom_line() + 
-   geom_point() + 
-   labs(subtitle = 'Insurance cost', x = "Year", y = "Policy cost [$]") +
-   theme(panel.grid.minor.x = element_blank()) + 
-   scale_y_continuous(breaks = seq(600,1400, by = 100)) +
-   scale_x_date(date_labels = "%Y", date_breaks = "years", date_minor_breaks = "months") +
-   scale_color_discrete(name = "Region")
-p1
-
-ggsave("regions_yearly.jpg", width = 4, height = 7)
-
-#p2 = ggplot(data = region_df, aes(x = policydate, y = num/1e6, group = state, color = state)) + theme_bw() + 
-#   geom_line() + 
-#   geom_point() + 
-#   labs(subtitle = 'Policy numbers', x = "Year", y = "Number [mil]") +
-#   scale_x_date(date_labels = "%m/%Y", date_breaks = "years", date_minor_breaks = "months")# +
-#p2
-
-
-
-#p3 = ggplot(data = region_df, aes(x = policydate, y = amt/1e6, group = state, color = state)) + theme_bw() + 
-#   geom_line() + 
-#   geom_point() + 
-#   labs(subtitle = 'Insured amount', x = "Year", y = "Amount [mil $]") +
-#   scale_x_date(date_labels = "%m/%Y", date_breaks = "years", date_minor_breaks = "months")# +
-#p3
-
 
 
 # MAPS 
@@ -332,6 +182,8 @@ region_df = rbind(MD_df,MW_df,NE_df,PA_df,S_df)
 region_df = rename(region_df,"geo_region" = "state")
 
 
+
+
 usm = map_data('usa')
 usstates = map_data("state")
 states = unique(usstates$region)
@@ -362,6 +214,7 @@ p1 = p1 + geom_polygon(color = "gray90", size = 0.1) +
          legend.text = element_text(size = 7),
          legend.key.size = unit(1,"cm"),
          legend.key.width = unit(0.5,"cm")) + 
+   #scale_colour_brewer() + scale_fill_distiller(palette = "Spectral")
    scale_fill_gradient(low = "white", high = "#800026")
 p1
 
@@ -550,25 +403,354 @@ p1 = ggplot(data = region_df, aes(x = policydate, y = cost, group = state, color
    scale_color_discrete(name = "Region")
 p1
 
-ggsave("regions_monthly.jpg", width = 8, height = 4)
+ggsave("regions_monthly.jpg", width = 9, height = 5)
 
 
 
 ## Make interactive chart for readability
-p3 =ggplot(data = region_df, aes(x = policydate, y = cost, group = state, color = state,
-                                  text = paste0(state, "<br>", "Cost: $", round(amt/1e3,0)))) +
-   xlab("Year") + 
-   ylab("Amount insured [K $]") + 
-   theme_minimal(base_size = 14) + 
-   geom_point(aes(color=state), size = 1.5, alpha = 0.5) +
-   geom_line(aes(color=state)) +
-   scale_x_date(date_labels = "%m/%Y", date_breaks = "years", date_minor_breaks = "months")
+#p3 =ggplot(data = region_df, aes(x = policydate, y = cost, group = state, color = state,
+#                                  text = paste0(state, "<br>", "Cost: $", round(amt/1e3,0)))) +
+#   xlab("Year") + 
+#   ylab("Amount insured [K $]") + 
+#   theme_minimal(base_size = 14) + 
+#   geom_point(aes(color=state), size = 1.5, alpha = 0.5) +
+#   geom_line(aes(color=state)) +
+#   scale_x_date(date_labels = "%m/%Y", date_breaks = "years", date_minor_breaks = "months")
 
 
-p3_interactive <- ggplotly(p3, tooltip="text") %>% 
-   config(displayModeBar = FALSE)
+#p3_interactive <- ggplotly(p3, tooltip="text") %>% 
+#   config(displayModeBar = FALSE)
 
 # plot the chart
-print(p3_interactive)
+#print(p3_interactive)
 
-htmlwidgets::saveWidget(as_widget(p3), "plotly.html")
+#htmlwidgets::saveWidget(p3, "plotly.html")
+
+
+################################################################
+#### Make yearly timeseries by removing seasonal cycle first.
+############################################################
+
+NE = c('ME','NH','MA','RI','VT','NY','PA','NJ','DE','CT')
+for (i in (1:length(NE))){
+   load(paste('data/', NE[i], '.Rda', sep = ''))
+   eval(parse(text = paste('st= ' , NE[i], sep = '')))
+   eval(parse(text = paste('remove(', NE[i],')', sep = '')))
+   
+   if (i == 1){
+      NE_df = st
+   } else {
+      NE_df = rbind(NE_df,st)
+   }
+}
+NE_df = NE_df %>%
+   filter(policydate < as.Date("2019-08-01")) %>%
+   summarise_by_time(.date_var = policydate, .by= "day", 
+                     cost = mean(policycost)) 
+#num = n(),
+#amt = mean(building_ins + content_ins)) %>%
+
+ts_st = ts(NE_df$cost, start = as.yearmon(NE_df$policydate[1]), freq = 24*15)
+decom_st = decompose(ts_st)
+
+st_seasAdj = ts_st - decom_st$seasonal
+df_adj = data.frame(cost_adj = as.matrix(st_seasAdj), date =time(st_seasAdj))
+df_adj$year = as.numeric(trunc(df_adj$date))
+df_adj$month = (df_adj$date - df_adj$year) * 12 +1
+df_adj$month2 = as.numeric(trunc(df_adj$month))
+df_adj$day = (df_adj$month - df_adj$month2) * 30
+df_adj$day = round(as.numeric(df_adj$day + 1),0)
+df_adj = df_adj %>% mutate(time = paste(year,month2,day,sep = '-')) 
+df_adj$time = as.Date(df_adj$time, format = "%Y-%m-%d")
+NE_adj = df_adj
+
+#lm_NE = lm(cost_adj ~ time, data = NE_adj)
+
+
+df_adj = data.frame(cost_seas = as.matrix(decom_st$seasonal), date =time(decom_st$seasonal))
+df_adj$year = as.numeric(trunc(df_adj$date))
+df_adj$month = (df_adj$date - df_adj$year) * 12 +1
+df_adj$month2 = as.numeric(trunc(df_adj$month))
+df_adj$day = (df_adj$month - df_adj$month2) * 30
+df_adj$day = round(as.numeric(df_adj$day + 1),0)
+df_adj = df_adj %>% mutate(time = paste(year,month2,day,sep = '-')) 
+df_adj$time = as.Date(df_adj$time, format = "%Y-%m-%d")
+NE_seas = df_adj
+
+
+
+MW = c('ND','SD','NE','KS','MO','IA','MN','WI','IL','IN','MI','OH')
+for (i in (1:length(MW))){
+   load(paste('data/', MW[i], '.Rda', sep = ''))
+   eval(parse(text = paste('st= ' , MW[i], sep = '')))
+   eval(parse(text = paste('remove(', MW[i],')', sep = '')))
+   
+   if (i == 1){
+      MW_df = st
+   } else {
+      MW_df = rbind(MW_df,st)
+   }
+}
+MW_df = MW_df %>%
+   filter(policydate < as.Date("2019-08-01")) %>%
+   summarise_by_time(.date_var = policydate, .by= "day", 
+                     cost = mean(policycost)) 
+
+ts_st = ts(MW_df$cost, start = as.yearmon(MW_df$policydate[1]), freq = 24*15)
+decom_st = decompose(ts_st)
+
+st_seasAdj = ts_st - decom_st$seasonal
+df_adj = data.frame(cost_adj = as.matrix(st_seasAdj), date =time(st_seasAdj))
+df_adj$year = as.numeric(trunc(df_adj$date))
+df_adj$month = (df_adj$date - df_adj$year) * 12 +1
+df_adj$month2 = as.numeric(trunc(df_adj$month))
+df_adj$day = (df_adj$month - df_adj$month2) * 30
+df_adj$day = round(as.numeric(df_adj$day + 1),0)
+df_adj = df_adj %>% mutate(time = paste(year,month2,day,sep = '-')) 
+df_adj$time = as.Date(df_adj$time, format = "%Y-%m-%d")
+MW_adj = df_adj
+
+#lm_MW = lm(cost_adj ~ time, data = MW_adj)
+
+
+df_adj = data.frame(cost_seas = as.matrix(decom_st$seasonal), date =time(decom_st$seasonal))
+df_adj$year = as.numeric(trunc(df_adj$date))
+df_adj$month = (df_adj$date - df_adj$year) * 12 +1
+df_adj$month2 = as.numeric(trunc(df_adj$month))
+df_adj$day = (df_adj$month - df_adj$month2) * 30
+df_adj$day = round(as.numeric(df_adj$day + 1),0)
+df_adj = df_adj %>% mutate(time = paste(year,month2,day,sep = '-')) 
+df_adj$time = as.Date(df_adj$time, format = "%Y-%m-%d")
+MW_seas = df_adj
+
+
+
+
+S = c('WV','VA','MD','DC','NC','KY','TN','SC','GA','AL','MS','LA','AR','OK','TX','FL')
+for (i in (1:length(S))){
+   load(paste('data/', S[i], '.Rda', sep = ''))
+   eval(parse(text = paste('st= ' , S[i], sep = '')))
+   eval(parse(text = paste('remove(', S[i],')', sep = '')))
+   
+   if (i == 1){
+      S_df = st
+   } else {
+      S_df = rbind(S_df,st)
+   }
+}
+S_df = S_df %>%
+   filter(policydate < as.Date("2019-08-01")) %>%
+   summarise_by_time(.date_var = policydate, .by= "day", 
+                     cost = mean(policycost)) 
+
+ts_st = ts(S_df$cost, start = as.yearmon(S_df$policydate[1]), freq = 24*15)
+decom_st = decompose(ts_st)
+
+st_seasAdj = ts_st - decom_st$seasonal
+df_adj = data.frame(cost_adj = as.matrix(st_seasAdj), date =time(st_seasAdj))
+df_adj$year = as.numeric(trunc(df_adj$date))
+df_adj$month = (df_adj$date - df_adj$year) * 12 +1
+df_adj$month2 = as.numeric(trunc(df_adj$month))
+df_adj$day = (df_adj$month - df_adj$month2) * 30
+df_adj$day = round(as.numeric(df_adj$day + 1),0)
+df_adj = df_adj %>% mutate(time = paste(year,month2,day,sep = '-')) 
+df_adj$time = as.Date(df_adj$time, format = "%Y-%m-%d")
+S_adj = df_adj
+
+#lm_S = lm(cost_adj ~ time, data = S_adj)
+
+
+df_adj = data.frame(cost_seas = as.matrix(decom_st$seasonal), date =time(decom_st$seasonal))
+df_adj$year = as.numeric(trunc(df_adj$date))
+df_adj$month = (df_adj$date - df_adj$year) * 12 +1
+df_adj$month2 = as.numeric(trunc(df_adj$month))
+df_adj$day = (df_adj$month - df_adj$month2) * 30
+df_adj$day = round(as.numeric(df_adj$day + 1),0)
+df_adj = df_adj %>% mutate(time = paste(year,month2,day,sep = '-')) 
+df_adj$time = as.Date(df_adj$time, format = "%Y-%m-%d")
+S_seas = df_adj
+
+
+
+
+MD = c('MT','ID','WY','CO','NM','AZ','UT','NV')
+for (i in (1:length(MD))){
+   load(paste('data/', MD[i], '.Rda', sep = ''))
+   eval(parse(text = paste('st= ' , MD[i], sep = '')))
+   eval(parse(text = paste('remove(', MD[i],')', sep = '')))
+   
+   if (i == 1){
+      MD_df = st
+   } else {
+      MD_df = rbind(MD_df,st)
+   }
+}
+MD_df = MD_df %>%
+   filter(policydate < as.Date("2019-08-01")) %>%
+   summarise_by_time(.date_var = policydate, .by= "day", 
+                     cost = mean(policycost)) 
+
+ts_st = ts(MD_df$cost, start = as.yearmon(MD_df$policydate[1]), freq = 24*15)
+decom_st = decompose(ts_st)
+
+st_seasAdj = ts_st - decom_st$seasonal
+df_adj = data.frame(cost_adj = as.matrix(st_seasAdj), date =time(st_seasAdj))
+df_adj$year = as.numeric(trunc(df_adj$date))
+df_adj$month = (df_adj$date - df_adj$year) * 12 +1
+df_adj$month2 = as.numeric(trunc(df_adj$month))
+df_adj$day = (df_adj$month - df_adj$month2) * 30
+df_adj$day = round(as.numeric(df_adj$day + 1),0)
+df_adj = df_adj %>% mutate(time = paste(year,month2,day,sep = '-')) 
+df_adj$time = as.Date(df_adj$time, format = "%Y-%m-%d")
+MD_adj = df_adj
+
+#lm_MD = lm(cost_adj ~ time, data = MD_adj)
+
+
+df_adj = data.frame(cost_seas = as.matrix(decom_st$seasonal), date =time(decom_st$seasonal))
+df_adj$year = as.numeric(trunc(df_adj$date))
+df_adj$month = (df_adj$date - df_adj$year) * 12 +1
+df_adj$month2 = as.numeric(trunc(df_adj$month))
+df_adj$day = (df_adj$month - df_adj$month2) * 30
+df_adj$day = round(as.numeric(df_adj$day + 1),0)
+df_adj = df_adj %>% mutate(time = paste(year,month2,day,sep = '-')) 
+df_adj$time = as.Date(df_adj$time, format = "%Y-%m-%d")
+MD_seas = df_adj
+
+
+
+
+
+
+
+
+PA = c('WA','OR','CA')
+for (i in (1:length(PA))){
+   load(paste('data/', PA[i], '.Rda', sep = ''))
+   eval(parse(text = paste('st= ' , PA[i], sep = '')))
+   eval(parse(text = paste('remove(', PA[i],')', sep = '')))
+   
+   if (i == 1){
+      PA_df = st
+   } else {
+      PA_df = rbind(PA_df,st)
+   }
+}
+PA_df = PA_df %>%
+   filter(policydate < as.Date("2019-08-01")) %>%
+   summarise_by_time(.date_var = policydate, .by= "day", 
+                     cost = mean(policycost)) 
+
+ts_st = ts(PA_df$cost, start = as.yearmon(PA_df$policydate[1]), freq = 24*15)
+decom_st = decompose(ts_st)
+
+st_seasAdj = ts_st - decom_st$seasonal
+df_adj = data.frame(cost_adj = as.matrix(st_seasAdj), date =time(st_seasAdj))
+df_adj$year = as.numeric(trunc(df_adj$date))
+df_adj$month = (df_adj$date - df_adj$year) * 12 +1
+df_adj$month2 = as.numeric(trunc(df_adj$month))
+df_adj$day = (df_adj$month - df_adj$month2) * 30
+df_adj$day = round(as.numeric(df_adj$day + 1),0)
+df_adj = df_adj %>% mutate(time = paste(year,month2,day,sep = '-')) 
+df_adj$time = as.Date(df_adj$time, format = "%Y-%m-%d")
+PA_adj = df_adj
+
+#lm_PA = lm(cost_adj ~ time, data = PA_adj)
+
+
+df_adj = data.frame(cost_seas = as.matrix(decom_st$seasonal), date =time(decom_st$seasonal))
+df_adj$year = as.numeric(trunc(df_adj$date))
+df_adj$month = (df_adj$date - df_adj$year) * 12 +1
+df_adj$month2 = as.numeric(trunc(df_adj$month))
+df_adj$day = (df_adj$month - df_adj$month2) * 30
+df_adj$day = round(as.numeric(df_adj$day + 1),0)
+df_adj = df_adj %>% mutate(time = paste(year,month2,day,sep = '-')) 
+df_adj$time = as.Date(df_adj$time, format = "%Y-%m-%d")
+PA_seas = df_adj
+
+
+
+
+
+
+
+MD_adj = MD_adj %>% mutate(region = "MD") 
+MD_adj = MD_adj[c(1,7,8)]
+MD_seas = MD_seas %>% mutate(region = "MD") 
+MD_seas = MD_seas[c(1,7,8)]
+
+MW_adj = MW_adj %>% mutate(region = "MW") 
+MW_adj = MW_adj[c(1,7,8)]
+MW_seas = MW_seas %>% mutate(region = "MW") 
+MW_seas = MW_seas[c(1,7,8)]
+
+NE_adj = NE_adj %>% mutate(region = "NE")
+NE_adj = NE_adj[c(1,7,8)]
+NE_seas = NE_seas %>% mutate(region = "NE") 
+NE_seas = NE_seas[c(1,7,8)]
+
+PA_adj = PA_adj %>% mutate(region = "PA")
+PA_adj = PA_adj[c(1,7,8)]
+PA_seas = PA_seas %>% mutate(region = "PA") 
+PA_seas = PA_seas[c(1,7,8)]
+
+S_adj = S_adj %>% mutate(region = "S")
+S_adj = S_adj[c(1,7,8)]
+S_seas = S_seas %>% mutate(region = "S") 
+S_seas = S_seas[c(1,7,8)]
+
+region_adj = rbind(MD_adj,MW_adj,NE_adj,PA_adj,S_adj)
+region_seas = rbind(MD_seas,MW_seas,NE_seas,PA_seas,S_seas)
+
+
+rm_seas = region_seas %>% group_by(region) %>%
+   summarise_by_time(.date_var = time, .by= "month", 
+                     cost = mean(cost_seas)) 
+
+rm_adj = region_adj %>% group_by(region) %>%
+   summarize_by_time(.date_var = time, .by = "month",
+                     cost = mean(cost_adj))
+
+
+rm_adj_yr = region_adj %>% group_by(region) %>%
+   summarize_by_time(.date_var = time, .by = "year",
+                     cost = mean(cost_adj))
+
+
+
+
+
+rm_one = rm_seas %>% group_by(region) %>%
+   filter(row_number()<=24) 
+
+ggplot(inherit.aes = FALSE, data = rm_one,
+       aes(x = time, y= cost, group = region, color = region)) + 
+   theme_bw() + 
+   geom_line()+
+   facet_wrap(~region, ncol = 1) +
+   scale_x_date(date_labels = "%m", date_breaks = "2 months") +
+   labs(y = "Month",
+        x = "Dollar [$]", 
+        title = "Seasonal variability of cost")
+ 
+
+ggsave("region_seasons.jpg", width =4, height = 6)
+                 
+   
+   
+
+ggplot(inherit.aes = FALSE, data = rm_adj,
+       aes(x = time, y= cost, group = region), color = '#999999') + 
+   theme_bw() + 
+   geom_line()+
+   scale_x_date(date_labels = "%Y", date_breaks = "years") +
+   geom_line(data = rm_adj_yr, aes(x = time, y = cost, group = region, color = region),
+             size = 1.5, alpha = 0.7 ) +
+   labs(x = "Year",
+        y = "Dollar [$]", 
+        title = "Yearly variability of cost")
+
+
+ggsave("regions_yearly.jpg", width = 6, height = 5)
+
+

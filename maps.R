@@ -46,6 +46,10 @@ for (i in 1:length(state_list)){
 usstates = left_join(usstates,df, by = "region")
    
 
+
+
+
+
 p2 = ggplot(dat = usstates, 
             mapping = aes(x = long,y = lat, group = group, fill = mean_cost))
 p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
@@ -86,38 +90,52 @@ ggsave("state_cost_bar.jpg", width = 6, height = 10)
 ############################################################
 
 
+census = read.csv("data/nst-est2019-01.csv", header = F, sep = ",", fill = TRUE)
+census = census %>% filter(V1 !="Alaska") %>% filter(V1 != "Hawaii") 
+   #mutate(state = state_list)
+census = census[c(7,8,9,10,11,12,13)]
+colnames(census) = c("2013","2014","2015","2016","2017","2018","2019")
+census$mean_cns = rowMeans(census)
+census = cbind(census,state_list)
+colnames(census) = c("2013","2014","2015","2016","2017","2018","2019","mean_cns","state")
 
 
-p2 = ggplot(dat = usstates, 
-            mapping = aes(x = long,y = lat, group = group, fill = number/1e6))
+
+usstates_census = left_join(usstates,census, by = "state")
+
+
+p2 = ggplot(dat = usstates_census, 
+            mapping = aes(x = long,y = lat, group = group, fill = (number/mean_cns)*100))
 p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
    coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
              xlim = c(-118, -75), ylim = c(50, 25)) + 
-   labs(fill = "Number of policies [mil]", x = '', y = '') +
+   labs(fill = "Percent [%]", x = '', y = '') +
    theme(axis.ticks.x = element_blank(),
          axis.text.x = element_blank(),
          legend.title = element_text(size = 7), 
          legend.text = element_text(size = 7),
          legend.key.size = unit(1,"cm"),
          legend.key.width = unit(0.5,"cm"))+ 
-   scale_fill_gradient(low = "white", high = "#800026")
+   scale_fill_gradient(low = "white", high = "#800026") +
+   labs(title = "Number of policies per population")
 p2
-ggsave("state_number.jpg", width = 6, height = 4)
+
+ggsave("state_policy_percent.jpg", width = 6, height = 4)
 
 
 
-states_uni = usstates %>% group_by(state) %>% summarize(num_policies = mean(number)) 
+states_uni = usstates_census %>% group_by(state) %>% summarize(percent_policies = mean((number/mean_cns)*100)) 
 
 
 p3 = states_uni %>% 
-   ggplot(aes(num_policies, reorder(state, -num_policies))) + 
+   ggplot(aes(percent_policies, reorder(state, -percent_policies))) + 
    geom_col()+
    labs(y = "State",
         x = "Policy Cost [$]", 
         title = "Average cost of policy per state")
 p3 + theme(axis.text.y = element_text(size = 12),
            axis.text.x = element_text(size = 12))
-ggsave("state_num_bar.jpg", width = 6, height = 10)
+ggsave("state_percent_bar.jpg", width = 6, height = 10)
 
 
 
@@ -133,11 +151,11 @@ ggsave("state_num_bar.jpg", width = 6, height = 10)
 ############################################################
 
 p2 = ggplot(dat = usstates, 
-            mapping = aes(x = long,y = lat, group = group, fill = amt/1e6))
+            mapping = aes(x = long,y = lat, group = group, fill = amt/1e3))
 p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
    coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
              xlim = c(-118, -75), ylim = c(50, 25)) + 
-   labs(fill = "Amount [mil $]", x = '', y = '') +
+   labs(fill = "Amount [K $]", x = '', y = '') +
    theme(axis.ticks.x = element_blank(),
          axis.text.x = element_blank(),
          legend.title = element_text(size = 7), 
@@ -154,10 +172,10 @@ states_uni = usstates %>% group_by(state) %>% summarize(amount_ins = mean(amt))
 
 
 p3 = states_uni %>% 
-   ggplot(aes(amount_ins, reorder(state, -amount_ins))) + 
+   ggplot(aes(amount_ins/1e3, reorder(state, -amount_ins))) + 
    geom_col()+
    labs(y = "State",
-        x = "Amount [mil $]", 
+        x = "Amount [K $]", 
         title = "Average amount insured")
 p3 + theme(axis.text.y = element_text(size = 12),
            axis.text.x = element_text(size = 12))
@@ -216,7 +234,7 @@ ggsave("state_cost_per_amt.jpg", width = 6, height = 10)
 
 
 ###### Insurance amount by county
-library(zipcodeR)
+#library(zipcodeR)
 
 ############################################################
 ############### MEAN POLICYCOST BY COUNTY ###############
@@ -224,55 +242,55 @@ library(zipcodeR)
 
  
 
-for (i in 1:length(state_list)){
-   eval(parse(text = paste("DD = read.csv('data/", state_list[i], ".csv')", sep = '')))
+#for (i in 1:length(state_list)){
+#   eval(parse(text = paste("DD = read.csv('data/", state_list[i], ".csv')", sep = '')))
    
-   eval(parse(text = paste("zip_county = search_state('", state_list[i], "')", sep = '')))
+#   eval(parse(text = paste("zip_county = search_state('", state_list[i], "')", sep = '')))
    
-   zip_county = zip_county %>% 
-      select("zip" = "zipcode","county", "lat", "lng") %>% 
-      mutate(zip = as.integer(zip)) %>%
-      mutate(county = tolower(county)) %>% mutate(county = gsub(' county','',county))
+#   zip_county = zip_county %>% 
+#      select("zip" = "zipcode","county", "lat", "lng") %>% 
+#      mutate(zip = as.integer(zip)) %>%
+#      mutate(county = tolower(county)) %>% mutate(county = gsub(' county','',county))
    
-   DD_new = left_join(DD,zip_county, by = "zip")
+#   DD_new = left_join(DD,zip_county, by = "zip")
    
-   avg_cost = DD_new %>% group_by(county) %>% 
-      summarise(mean_cost = mean(policycost)) %>% 
-      mutate(region = states[i])
+#   avg_cost = DD_new %>% group_by(county) %>% 
+#      summarise(mean_cost = mean(policycost)) %>% 
+#      mutate(region = states[i])
    
-   avg_cost['state'] = state_list[i]
+#   avg_cost['state'] = state_list[i]
    
-   if (i == 1){
-      df = avg_cost
-   } else {
-      df = rbind(df,avg_cost)
-   }
-   print(i)
-} 
+#   if (i == 1){
+#      df = avg_cost
+#   } else {
+#      df = rbind(df,avg_cost)
+#   }
+#   print(i)
+#} 
 
 
-df = df %>% rename(subregion = county) 
+#df = df %>% rename(subregion = county) 
 
 
-uscounty = map_data("county")
-uscounty = left_join(uscounty,df, by = c("subregion","region"))
-uscounty = uscounty %>%  
-   filter(!is.na(mean_cost)) %>% 
-   select("long", "lat", "group","subregion","mean_cost")
+#uscounty = map_data("county")
+#uscounty = left_join(uscounty,df, by = c("subregion","region"))
+#uscounty = uscounty %>%  
+#   filter(!is.na(mean_cost)) %>% 
+#   select("long", "lat", "group","subregion","mean_cost")
                                
                                
                                
 
-p2 = ggplot(dat = uscounty, 
-            mapping = aes(x = long,y = lat, group = group, fill = mean_cost)) 
+#p2 = ggplot(dat = uscounty, 
+#            mapping = aes(x = long,y = lat, group = group, fill = mean_cost)) 
 
-p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
-   coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
-             xlim = c(-118, -75), ylim = c(50, 25)) + 
-   labs(title = 'Average policy cost by county') + labs(fill = "mean_cost") + 
-   labs(x = 'Longitude', y = 'Latitude') + 
-   scale_fill_gradient(low = "#ffffd9", high = "#081d58")
-p2
+#p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
+#   coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
+#             xlim = c(-118, -75), ylim = c(50, 25)) + 
+#   labs(title = 'Average policy cost by county') + labs(fill = "mean_cost") + 
+#   labs(x = 'Longitude', y = 'Latitude') + 
+#   scale_fill_gradient(low = "#ffffd9", high = "#081d58")
+#p2
 
 
 ############################################################
