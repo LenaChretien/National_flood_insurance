@@ -104,6 +104,21 @@ PERC = df %>% group_by(state) %>% summarize(perc_diff = ratio[1] - ratio[2])
 
 
 
+flood_ratio = df %>% filter(flood == 1) %>% select(c(3,4))
+
+ggplot(data = flood_ratio, aes(x = ratio, reorder(state, -ratio))) + 
+   geom_col()+
+   labs(y = "State",
+        x = "Cost/1000 $ [mil $]", 
+        title = "")
+p3 + theme(axis.text.y = element_text(size = 12),
+           axis.text.x = element_text(size = 12))
+
+ggsave("figures/flood_ratio.jpg", width = 7, height = 10)
+
+
+
+
 usstates = left_join(usstates,PERC, by = "state")
 
 p2 = ggplot(dat = usstates, 
@@ -115,7 +130,10 @@ p2 = p2 + geom_polygon(color = "gray90", size = 0.1) +
       scale_fill_distiller(palette = "RdBu")
 p2
 
-ggsave("floodzone_perc_diff.jpg", width = 8, height = 6)
+ggsave("figures/floodzone_perc_diff.jpg", width = 8, height = 6)
+
+
+
 
 states_uni = usstates %>% group_by(state) %>% summarize(perc_diff = mean(perc_diff)) 
 
@@ -123,7 +141,7 @@ states_uni = usstates %>% group_by(state) %>% summarize(perc_diff = mean(perc_di
 p3 = states_uni %>% ggplot(aes(perc_diff, reorder(state, -perc_diff))) + geom_col()+
       labs(y = "State", x = "[%] difference", title = "")
 p3 + theme(axis.text.y = element_text(size = 6))
-ggsave("floodzone_perc_diff_bars.jpg", width = 4, height = 6)
+ggsave("figures/floodzone_perc_diff_bars.jpg", width = 4, height = 6)
 
 
 
@@ -140,11 +158,11 @@ p2 = ggplot(dat = usstates_cost_diff,
 p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
    coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
              xlim = c(-118, -75), ylim = c(50, 25)) + 
-   labs(title = 'NO floodzoone - floodzone [%]') + labs(fill = "[%] differences") + 
+   labs(title = 'NO floodzoone - floodzone cost') + labs(fill = "[$] differences") + 
    scale_fill_distiller(palette = "Blues")
 p2
 
-ggsave("floodzone_cost_diff.jpg", width = 8, height = 6)
+ggsave("figures/floodzone_cost_diff.jpg", width = 8, height = 6)
 
 
 states_uni = usstates_cost_diff %>% group_by(state) %>% summarize(cost_diff = mean(cost_diff)) 
@@ -152,7 +170,7 @@ states_uni = usstates_cost_diff %>% group_by(state) %>% summarize(cost_diff = me
 p3 = states_uni %>% ggplot(aes(cost_diff, reorder(state, -cost_diff))) + geom_col()+
    labs(y = "State", x = "[$] difference", title = "")
 p3 + theme(axis.text.y = element_text(size = 6))
-ggsave("floodzone_cost_diff_bars.jpg", width = 4, height = 6)
+ggsave("figures/floodzone_cost_diff_bars.jpg", width = 4, height = 6)
 
 
 
@@ -169,11 +187,11 @@ p2 = ggplot(dat = usstates_amt_diff,
 p2 = p2 + geom_polygon(color = "gray90", size = 0.1) + 
    coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
              xlim = c(-118, -75), ylim = c(50, 25)) + 
-   labs(title = 'NO floodzoone - floodzone [%]') + labs(fill = "[%] differences") + 
+   labs(title = 'NO floodzoone - floodzone amount per $') + labs(fill = "[$] differences") + 
    scale_fill_distiller(palette = "Blues")
 p2
 
-ggsave("floodzone_amt_diff.jpg", width = 8, height = 6)
+ggsave("figures/floodzone_amt_diff.jpg", width = 8, height = 6)
 
 
 states_uni = usstates_amt_diff %>% group_by(state) %>% summarize(amt_diff = mean(cost_amt_diff)) 
@@ -182,7 +200,7 @@ p3 = states_uni %>% ggplot(aes(amt_diff, reorder(state, -amt_diff))) + geom_col(
    labs(y = "State", x = "cost $/1000$", title = "")
 p3 + theme(axis.text.y = element_text(size = 6))
 
-ggsave("floodzone_amt_diff_bars.jpg", width = 4, height = 6)
+ggsave("figures/floodzone_amt_diff_bars.jpg", width = 4, height = 6)
 
 
 ###############################################################################
@@ -207,30 +225,31 @@ for (i in (1:length(NE))){
 NE_df_flood = NE_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "1") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
-                     cost = mean(policycost)) %>%
-   filter(flood == 1)
+                     cost = mean(policycost))
+
 
 NE_df_noflood = NE_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "0") %>%
    summarise_by_time(.date_var = policydate, .by= "day", 
-                     cost = mean(policycost)) %>%
-   filter(flood == 0)
+                     cost = mean(policycost)) 
 
 
 
@@ -313,30 +332,30 @@ for (i in (1:length(MW))){
 MW_df_flood = MW_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "1") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
-                     cost = mean(policycost)) %>%
-   filter(flood == 1)
+                     cost = mean(policycost))
 
 MW_df_noflood = MW_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "0") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
-                     cost = mean(policycost)) %>%
-   filter(flood == 0)
+                     cost = mean(policycost))
 
 
 
@@ -417,31 +436,30 @@ for (i in (1:length(S))){
 S_df_flood = S_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "1") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
-                     cost = mean(policycost)) %>%
-   filter(flood == 1)
+                     cost = mean(policycost))
 
 S_df_noflood = S_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "0") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
-                     cost = mean(policycost)) %>%
-   filter(flood == 0)
-
+                     cost = mean(policycost))
 
 
 
@@ -521,30 +539,30 @@ for (i in (1:length(MD))){
 MD_df_flood = MD_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "1") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
-                     cost = mean(policycost)) %>%
-   filter(flood == 1)
+                     cost = mean(policycost))
 
 MD_df_noflood = MD_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "0") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
-                     cost = mean(policycost)) %>%
-   filter(flood == 0)
+                     cost = mean(policycost))
 
 
 
@@ -629,30 +647,30 @@ for (i in (1:length(PA))){
 PA_df_flood = PA_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "1") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
-                     cost = mean(policycost)) %>%
-   filter(flood == 1)
+                     cost = mean(policycost))
 
 PA_df_noflood = PA_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "0") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
-                     cost = mean(policycost)) %>%
-   filter(flood == 0)
+                     cost = mean(policycost))
 
 
 
@@ -830,18 +848,32 @@ rm_noflood_one = rm_noflood_seas %>% group_by(region) %>%
 
 
 
+hur_start = c("2009-06-01","2010-06-01")
+hur_start = as.Date(hur_start, format = "%Y-%m-%d")
+
+hur_end = c("2009-12-01","2010-12-01")
+hur_end = as.Date(hur_end, format = "%Y-%m-%d")
+
+
+
 P1 = ggplot(inherit.aes = FALSE, data = rm_flood_one,
        aes(x = time, y= cost, group = region, color = region)) + 
    theme_bw() + 
+   geom_rect(inherit.aes = F, aes(xmin = hur_start[1], xmax = hur_end[1], ymin = -Inf, ymax = Inf),
+             fill = "gray", alpha = 0.03) +
+   geom_rect(inherit.aes = F, aes(xmin = hur_start[2], xmax = hur_end[2], ymin = -Inf, ymax = Inf),
+             fill = "gray", alpha = 0.03) +
    geom_line()+
    facet_wrap(~region, ncol = 1) +
    scale_x_date(date_labels = "%m", date_breaks = "2 months") +
    labs(x = "Month",
         y = "Dollar [$]", 
-        title = "Seasonal variability of cost")
+        title = "")
+
+P1
 
 
-ggsave("region_flood_seasons.jpg", width =4, height = 6)
+ggsave("figures/region_flood_seasons.jpg", width =4, height = 6)
 
 
 
@@ -853,7 +885,7 @@ P1 + geom_line(data = rm_noflood_one,
    
 
 
-ggsave("region_noflood_seasons.jpg", width =4, height = 6)
+ggsave("figures/region_noflood_seasons.jpg", width =4, height = 6)
 
 
 
@@ -880,6 +912,63 @@ p2 + geom_line(data = rm_noflood_adj,
 ggsave("regions_yearly_flood.jpg", width = 6, height = 5)
 
 
+
+
+year = as.character(2009)
+month = as.character(1)
+day = as.character(1)
+ymd = as.Date(paste(year,month,day,sep = '-'))
+p1 =data.frame(ymd)
+colnames(p1) = "time" 
+
+year = as.character(2019)
+month = as.character(8)
+day = as.character(1)
+ymd = as.Date(paste(year,month,day,sep = '-'))
+p2 =data.frame(ymd)
+colnames(p2) = "time" 
+
+MD_diff_flood = predict(lm_MD_flood,p2) - predict(lm_MD_flood,p1)
+MW_diff_flood = predict(lm_MW_flood,p2) - predict(lm_MW_flood,p1)
+NE_diff_flood = predict(lm_NE_flood,p2) - predict(lm_NE_flood,p1)
+PA_diff_flood = predict(lm_PA_flood,p2) - predict(lm_PA_flood,p1)
+S_diff_flood = predict(lm_S_flood,p2) - predict(lm_S_flood,p1)
+
+regions = c("MD","MW","NE","PA","S")
+cost_incr = c(MD_diff_flood, MW_diff_flood, NE_diff_flood, PA_diff_flood, S_diff_flood)
+diff_df_flood = data.frame(cost_incr,regions)
+
+
+MD_diff_noflood = predict(lm_MD_noflood,p2) - predict(lm_MD_noflood,p1)
+MW_diff_noflood = predict(lm_MW_noflood,p2) - predict(lm_MW_noflood,p1)
+NE_diff_noflood = predict(lm_NE_noflood,p2) - predict(lm_NE_noflood,p1)
+PA_diff_noflood = predict(lm_PA_noflood,p2) - predict(lm_PA_noflood,p1)
+S_diff_noflood = predict(lm_S_noflood,p2) - predict(lm_S_noflood,p1)
+
+regions = c("MD","MW","NE","PA","S")
+cost_incr = c(MD_diff_noflood, MW_diff_noflood, NE_diff_noflood, PA_diff_noflood, S_diff_noflood)
+diff_df_noflood = data.frame(cost_incr,regions)
+
+
+
+diff_df_flood = diff_df_flood %>% mutate(flood = "1")
+diff_df_noflood = diff_df_noflood %>% mutate(flood = "0")
+diff_df = rbind(diff_df_flood,diff_df_noflood)
+
+
+p1 = diff_df %>% 
+   ggplot(aes(cost_incr,regions, fill = flood)) + 
+   geom_bar(stat = "identity",position = 'dodge')+
+   labs(y = "Region",
+        x = "Dollar [$]", 
+        title = "") +
+   scale_fill_discrete(labels = c("Non - Floodzone", "Floodzone"))
+p1
+
+ggsave("figures/Change_cost_floodzones.jpg", width = 4, height = 4)
+
+
+
 ###############################################################################
 ################### Change of proportion #################################
 ##############################################################################
@@ -902,35 +991,36 @@ for (i in (1:length(NE))){
 NE_df_flood = NE_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "1") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
                      cost = mean(policycost),
                      amt = mean(building_ins + content_ins)) %>%
-   mutate(cost_per = (cost/amt)*1000) %>%
-   filter(flood == 1)
+   mutate(cost_per = (cost/amt)*1000) 
+
 
 NE_df_noflood = NE_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "0") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
                      cost = mean(policycost),
                      amt = mean(building_ins + content_ins)) %>%
-   mutate(cost_per = (cost/amt)*1000) %>%
-   filter(flood == 0)
-
+   mutate(cost_per = (cost/amt)*1000) 
+   
 
 
 
@@ -1012,35 +1102,36 @@ for (i in (1:length(MW))){
 MW_df_flood = MW_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "1") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
                      cost = mean(policycost),
                      amt = mean(building_ins + content_ins)) %>%
-   mutate(cost_per = (cost/amt)*1000) %>%
-   filter(flood == 1)
+   mutate(cost_per = (cost/amt)*1000) 
+
+
 
 MW_df_noflood = MW_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "0") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
                      cost = mean(policycost),
                      amt = mean(building_ins + content_ins)) %>%
-   mutate(cost_per = (cost/amt)*1000) %>%
-   filter(flood == 0)
-
+   mutate(cost_per = (cost/amt)*1000) 
 
 
 
@@ -1120,35 +1211,37 @@ for (i in (1:length(S))){
 S_df_flood = S_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "1") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
                      cost = mean(policycost),
                      amt = mean(building_ins + content_ins)) %>%
-   mutate(cost_per = (cost/amt)*1000) %>%
-   filter(flood == 1)
+   mutate(cost_per = (cost/amt)*1000) 
+
+
+
 
 S_df_noflood = S_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "0") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
                      cost = mean(policycost),
                      amt = mean(building_ins + content_ins)) %>%
-   mutate(cost_per = (cost/amt)*1000) %>%
-   filter(flood == 0)
-
+   mutate(cost_per = (cost/amt)*1000) 
 
 
 
@@ -1228,35 +1321,38 @@ for (i in (1:length(MD))){
 MD_df_flood = MD_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "1") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
                      cost = mean(policycost),
                      amt = mean(building_ins + content_ins)) %>%
-   mutate(cost_per = (cost/amt)*1000) %>%
-   filter(flood == 1)
+   mutate(cost_per = (cost/amt)*1000) 
+
+
+
+
 
 MD_df_noflood = MD_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "0") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
                      cost = mean(policycost),
                      amt = mean(building_ins + content_ins)) %>%
-   mutate(cost_per = (cost/amt)*1000) %>%
-   filter(flood == 0)
-
+   mutate(cost_per = (cost/amt)*1000) 
 
 
 
@@ -1340,36 +1436,34 @@ for (i in (1:length(PA))){
 PA_df_flood = PA_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "1") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
                      cost = mean(policycost),
                      amt = mean(building_ins + content_ins)) %>%
-   mutate(cost_per = (cost/amt)*1000) %>%
-   filter(flood == 1)
-
+   mutate(cost_per = (cost/amt)*1000) 
 
 PA_df_noflood = PA_df %>%
    filter(policydate < as.Date("2019-08-01")) %>%
    mutate(flood = case_when(
-      startsWith(floodzone,"A") ~ 1,
-      startsWith(floodzone,"V") ~ 1, 
-      startsWith(floodzone, "X") ~ 0,
-      startsWith(floodzone, "C") ~ 0,
-      startsWith(floodzone, "D") ~ 0,
-      startsWith(floodzone, "B") ~ 0)) %>%
+      startsWith(floodzone,"A") ~"1",
+      startsWith(floodzone,"V") ~ "1", 
+      startsWith(floodzone, "X") ~ "0",
+      startsWith(floodzone, "C") ~ "0",
+      startsWith(floodzone, "D") ~ "0",
+      startsWith(floodzone, "B") ~ "0")) %>%
    group_by(flood) %>%
+   filter(flood == "0") %>% 
    summarise_by_time(.date_var = policydate, .by= "day", 
                      cost = mean(policycost),
                      amt = mean(building_ins + content_ins)) %>%
-   mutate(cost_per = (cost/amt)*1000) %>%
-   filter(flood == 0)
-
+   mutate(cost_per = (cost/amt)*1000) 
 
 
 
@@ -1545,54 +1639,58 @@ rm_noflood_one = rm_noflood_seas %>% group_by(region) %>%
    filter(row_number()<=24) 
 
 
+year = as.character(2009)
+month = as.character(1)
+day = as.character(1)
+ymd = as.Date(paste(year,month,day,sep = '-'))
+p1 =data.frame(ymd)
+colnames(p1) = "time" 
 
-P1 = ggplot(inherit.aes = FALSE, data = rm_flood_one,
-            aes(x = time, y= cost, group = region, color = region)) + 
-   theme_bw() + 
-   geom_line()+
-   facet_wrap(~region, ncol = 1) +
-   scale_x_date(date_labels = "%m", date_breaks = "2 months") +
-   labs(x = "Month",
-        y = "Dollar [$]", 
-        title = "cost/1000K")
+year = as.character(2019)
+month = as.character(8)
+day = as.character(1)
+ymd = as.Date(paste(year,month,day,sep = '-'))
+p2 =data.frame(ymd)
+colnames(p2) = "time" 
 
+MD_diff_flood = predict(lm_MD_flood,p2) - predict(lm_MD_flood,p1)
+MW_diff_flood = predict(lm_MW_flood,p2) - predict(lm_MW_flood,p1)
+NE_diff_flood = predict(lm_NE_flood,p2) - predict(lm_NE_flood,p1)
+PA_diff_flood = predict(lm_PA_flood,p2) - predict(lm_PA_flood,p1)
+S_diff_flood = predict(lm_S_flood,p2) - predict(lm_S_flood,p1)
 
-ggsave("region_flood_seasons.jpg", width =4, height = 6)
-
-
-
-P1 + geom_line(data = rm_noflood_one,
-               aes(group = region), color = "darkgray") +
-   facet_wrap(~region, ncol = 1) +
-   scale_x_date(date_labels = "%m", date_breaks = "2 months") 
-
-
-
-ggsave("region_noflood_costamt_seasons.jpg", width =4, height = 6)
-
+regions = c("MD","MW","NE","PA","S")
+cost_incr = c(MD_diff_flood, MW_diff_flood, NE_diff_flood, PA_diff_flood, S_diff_flood)
+diff_df_flood = data.frame(cost_incr,regions)
 
 
+MD_diff_noflood = predict(lm_MD_noflood,p2) - predict(lm_MD_noflood,p1)
+MW_diff_noflood = predict(lm_MW_noflood,p2) - predict(lm_MW_noflood,p1)
+NE_diff_noflood = predict(lm_NE_noflood,p2) - predict(lm_NE_noflood,p1)
+PA_diff_noflood = predict(lm_PA_noflood,p2) - predict(lm_PA_noflood,p1)
+S_diff_noflood = predict(lm_S_noflood,p2) - predict(lm_S_noflood,p1)
 
-p2 = ggplot(data = rm_flood_adj,
-            aes(x = time, y= cost, group = region), color = "darkgray") + 
-   theme_bw() + 
-   geom_line()+
-   scale_x_date(date_labels = "%Y", date_breaks = "years") +
-   geom_line(data = rm_flood_adj_yr, aes(x = time, y = cost, group = region, color = region),
-             size = 1.5, alpha = 0.7 ) +
-   labs(x = "Year",
-        y = "Dollar [$]", 
-        title = "Yearly variability of cost")
-
-p2
-p2 + geom_line(data = rm_noflood_adj,
-               aes(group = region), color = "darkgray") +
-   geom_line(data = rm_noflood_adj_yr, aes(group = region, color = region),
-             size = 1.5, alpha = 0.7 )
+regions = c("MD","MW","NE","PA","S")
+cost_incr = c(MD_diff_noflood, MW_diff_noflood, NE_diff_noflood, PA_diff_noflood, S_diff_noflood)
+diff_df_noflood = data.frame(cost_incr,regions)
 
 
 
-ggsave("regions_yearly_costamt_flood.jpg", width = 6, height = 5)
+diff_df_flood = diff_df_flood %>% mutate(flood = "1")
+diff_df_noflood = diff_df_noflood %>% mutate(flood = "0")
+diff_df = rbind(diff_df_flood,diff_df_noflood)
+
+
+p1 = diff_df %>% 
+   ggplot(aes(cost_incr,regions, fill = flood)) + 
+   geom_bar(stat = "identity",position = 'dodge')+
+   labs(y = "Region",
+        x = "Dollar [$]", 
+        title = "") +
+   scale_fill_discrete(labels = c("Non - Floodzone", "Floodzone"))  
+p1
+
+ggsave("figures/Change_amount_floodzones.jpg", width = 4, height = 4)
 
 
 

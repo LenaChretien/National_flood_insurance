@@ -5,6 +5,7 @@ library(maps)
 library(timetk)
 library(tidyverse) 
 library(plotly)
+library(zoo)
 
 state_list = c('AL','AZ','AR','CA','CO','CT','DE','DC','FL','GA','ID',
                'IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT',
@@ -36,7 +37,6 @@ pa = c('washington','oregon','california')
 
 
 
-usm = map_data('usa')
 usstates = map_data("state")
 states = unique(usstates$region)
 merg_states = data.frame(state_list,states)
@@ -184,14 +184,12 @@ region_df = rename(region_df,"geo_region" = "state")
 
 
 
-usm = map_data('usa')
 usstates = map_data("state")
 states = unique(usstates$region)
 merg_states = data.frame(state_list,states)
 merg_states = rename(merg_states,"region" = "states")
 
 
-NE = c('ME','NH','MA','RI','VT','NY','PA','NJ','DE','CT')
 usstates = left_join(usstates,merg_states, by = "region")
 usstates = usstates %>% mutate(geo_region = case_when(
    state_list %in% NE ~ "NE",
@@ -202,24 +200,34 @@ usstates = usstates %>% mutate(geo_region = case_when(
 usstates = left_join(usstates,region_df, by = 'geo_region')
 
 
-p1 = ggplot(dat = usstates, 
-            aes(x = long,y = lat, group = group, fill = cost))
-p1 = p1 + geom_polygon(color = "gray90", size = 0.1) + 
+
+library(RColorBrewer)
+#p1 = ggplot(inherit.aes = FALSE, dat = usstates, 
+#            aes(x = long,y = lat, group = group, fill = cost)) + 
+#   theme_bw()
+
+p1 = ggplot(data = usstates, aes(x = long, y = lat, group = group, color = geo_region)) +
+   theme_bw() +
+   geom_polygon(color = "black") +
    coord_map(projection = 'albers', lat0 = 39, lat1 = 45,
-             xlim = c(-118, -75), ylim = c(50, 25)) + 
-   labs(fill = "Regions", x = '', y = '') +
+             xlim = c(-118, -75), ylim = c(50, 25)) 
+
+
+
+p1 = p1 + geom_polygon(inherit.aes = FALSE, dat = usstates, 
+                       aes(x = long,y = lat, group = group, fill = cost), size = 0.1) + 
+   labs(fill = "Policy Cost [$}", x = '', y = '') +
    theme(axis.ticks.x = element_blank(),
          axis.text.x = element_blank(),
-         legend.title = element_text(size = 7), 
-         legend.text = element_text(size = 7),
+         legend.title = element_text(size = 9), 
+         legend.text = element_text(size = 8),
          legend.key.size = unit(1,"cm"),
          legend.key.width = unit(0.5,"cm")) + 
-   #scale_colour_brewer() + scale_fill_distiller(palette = "Spectral")
-   scale_fill_gradient(low = "white", high = "#800026")
+   scale_fill_distiller(palette = "YlOrRd", direction = 1)
 p1
 
 
-ggsave("regions_cost.jpg", width = 6, height = 4)
+ggsave("figures/regions_cost.jpg", width = 6, height = 4)
 
 
 #p2 = ggplot(dat = usstates, 
@@ -368,42 +376,55 @@ region_df = rbind(MD_df,MW_df,NE_df,PA_df,S_df)
 
 
 
-v.lines = c("2013-01-15", "2014-01-15", "2015-01-15", "2016-01-15",
+v.lines = c("2009-01-15","2010-01-15","2011-01-15","2012-01-15",
+            "2013-01-15", "2014-01-15", "2015-01-15", "2016-01-15",
             "2017-01-15", "2018-01-15", "2019-01-15")
 
-hur_start = c("2013-06-01", "2014-06-01", "2015-06-01", "2016-06-01", "2017-06-01", "2018-06-01", "2019-06-01")
+hur_start = c("2009-06-01","2010-06-01","2011-06-01","2012-06-01",
+              "2013-06-01", "2014-06-01", "2015-06-01", "2016-06-01", 
+              "2017-06-01", "2018-06-01", "2019-06-01")
 hur_start = as.Date(hur_start, format = "%Y-%m-%d")
 
-hur_end = c("2013-12-01", "2014-12-01", "2015-12-01", "2016-12-01", "2017-12-01", "2018-12-01", "2019-12-01")
+hur_end = c("2009-12-01","2010-12-01","2011-12-01","2012-12-01",
+            "2013-12-01", "2014-12-01", "2015-12-01", "2016-12-01",
+            "2017-12-01", "2018-12-01", "2019-12-01")
 hur_end = as.Date(hur_end, format = "%Y-%m-%d")
 
 p1 = ggplot(data = region_df, aes(x = policydate, y = cost, group = state, color = state)) +
    theme_bw() + 
    geom_rect(inherit.aes = F, aes(xmin = hur_start[1], xmax = hur_end[1], ymin = -Inf, ymax = Inf),
-             fill = "pink", alpha = 0.03) +
+             fill = "gray", alpha = 0.03) +
    geom_rect(inherit.aes = F, aes(xmin = hur_start[2], xmax = hur_end[2], ymin = -Inf, ymax = Inf),
-             fill = "pink", alpha = 0.03) +
+             fill = "gray", alpha = 0.03) +
    geom_rect(inherit.aes = F, aes(xmin = hur_start[3], xmax = hur_end[3], ymin = -Inf, ymax = Inf),
-             fill = "pink", alpha = 0.03) +
+             fill = "gray", alpha = 0.03) +
    geom_rect(inherit.aes = F, aes(xmin = hur_start[4], xmax = hur_end[4], ymin = -Inf, ymax = Inf),
-             fill = "pink", alpha = 0.03) +
+             fill = "gray", alpha = 0.03) +
    geom_rect(inherit.aes = F, aes(xmin = hur_start[5], xmax = hur_end[5], ymin = -Inf, ymax = Inf),
-             fill = "pink", alpha = 0.03) +
+             fill = "gray", alpha = 0.03) +
    geom_rect(inherit.aes = F, aes(xmin = hur_start[6], xmax = hur_end[6], ymin = -Inf, ymax = Inf),
-             fill = "pink", alpha = 0.03) +
+             fill = "gray", alpha = 0.03) +
    geom_rect(inherit.aes = F, aes(xmin = hur_start[7], xmax = hur_end[7], ymin = -Inf, ymax = Inf),
-             fill = "pink", alpha = 0.03) +
+             fill = "gray", alpha = 0.03) +
+   geom_rect(inherit.aes = F, aes(xmin = hur_start[8], xmax = hur_end[8], ymin = -Inf, ymax = Inf),
+             fill = "gray", alpha = 0.03) +
+   geom_rect(inherit.aes = F, aes(xmin = hur_start[9], xmax = hur_end[9], ymin = -Inf, ymax = Inf),
+             fill = "gray", alpha = 0.03) +
+   geom_rect(inherit.aes = F, aes(xmin = hur_start[10], xmax = hur_end[10], ymin = -Inf, ymax = Inf),
+             fill = "gray", alpha = 0.03) +
+   geom_rect(inherit.aes = F, aes(xmin = hur_start[11], xmax = hur_end[11], ymin = -Inf, ymax = Inf),
+             fill = "gray", alpha = 0.03) +
    geom_line() + 
    geom_point() + 
    geom_vline(xintercept = as.Date(v.lines)) + 
-   labs(subtitle = 'Insurance cost', x = "Year", y = "Policy cost [$]") +
+   labs(subtitle = '', x = "Year", y = "Policy cost [$]") +
    theme(panel.grid.minor.x = element_blank()) + 
    scale_y_continuous(breaks = seq(600,1400, by = 100)) +
    scale_x_date(date_labels = "%Y", date_breaks = "years", date_minor_breaks = "months") +
    scale_color_discrete(name = "Region")
 p1
 
-ggsave("regions_monthly.jpg", width = 9, height = 5)
+ggsave("figures/regions_monthly.jpg", width = 9, height = 5)
 
 
 
@@ -723,18 +744,31 @@ rm_adj_yr = region_adj %>% group_by(region) %>%
 rm_one = rm_seas %>% group_by(region) %>%
    filter(row_number()<=24) 
 
+
+hur_start = c("2009-06-01","2010-06-01")
+hur_start = as.Date(hur_start, format = "%Y-%m-%d")
+
+hur_end = c("2009-12-01","2010-12-01")
+hur_end = as.Date(hur_end, format = "%Y-%m-%d")
+
+
+
 ggplot(inherit.aes = FALSE, data = rm_one,
        aes(x = time, y= cost, group = region, color = region)) + 
    theme_bw() + 
+   geom_rect(inherit.aes = F, aes(xmin = hur_start[1], xmax = hur_end[1], ymin = -Inf, ymax = Inf),
+             fill = "gray", alpha = 0.03) +
+   geom_rect(inherit.aes = F, aes(xmin = hur_start[2], xmax = hur_end[2], ymin = -Inf, ymax = Inf),
+             fill = "gray", alpha = 0.03) +
    geom_line()+
    facet_wrap(~region, ncol = 1) +
    scale_x_date(date_labels = "%m", date_breaks = "2 months") +
-   labs(y = "Month",
-        x = "Dollar [$]", 
-        title = "Seasonal variability of cost")
- 
+   labs(x = "Month",
+        y = "Dollar [$]", 
+        title = "")
 
-ggsave("region_seasons.jpg", width =4, height = 6)
+
+ggsave("figures/region_seasons.jpg", width =5, height = 6)
                  
    
    
@@ -751,6 +785,6 @@ ggplot(inherit.aes = FALSE, data = rm_adj,
         title = "Yearly variability of cost")
 
 
-ggsave("regions_yearly.jpg", width = 6, height = 5)
+ggsave("figures/regions_yearly.jpg", width = 6, height = 5)
 
 
