@@ -28,8 +28,8 @@ https://www.leegov.com/dcd/flood/defined
 
 BEWARE: the file has information of 50,000,000 policies and is 12 GB large. 
 For easier processing, the file was split into sub - csv files and then  subset further to states. In additiononly only 20 of the original 45 columns were kept.
-The code used for this can be found in 
-"loading_data.R" 
+The code used for this can be found in the 
+"splitting_data*.R" files  
 
 
 Policycost of larger than $5000 were excluded, due to small numbers of them. 
@@ -37,5 +37,9 @@ Policycost of larger than $5000 were excluded, due to small numbers of them.
 
 Census data included was found here:
 https://www.census.gov/data/tables/time-series/demo/popest/2010s-state-total.html
+
+
+The presentation that resulted from this work can be found here:
+https://drive.google.com/file/d/1BFQJJ_DWWmNA2z7roJLYWkJumEMkPFth/view?usp=sharing
 
 
